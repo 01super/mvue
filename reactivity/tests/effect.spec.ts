@@ -7,6 +7,7 @@ describe("effect", () => {
     });
     let effectCount;
     effect(() => {
+      // effect 初始会先执行一遍，通过初始执行，便可以拿到其中的依赖
       effectCount = count.num;
     });
 
