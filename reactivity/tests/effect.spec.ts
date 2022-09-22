@@ -1,4 +1,5 @@
-import { effect, reactive } from "../effect";
+import { effect } from "../effect";
+import { reactive } from "../reactive";
 
 describe("effect", () => {
   it("happy path", () => {
@@ -8,11 +9,11 @@ describe("effect", () => {
     let effectCount;
     effect(() => {
       // effect 初始会先执行一遍，通过初始执行，便可以拿到其中的依赖
-      effectCount = count.num;
+      effectCount = count.num + 1;
     });
 
-    expect(effectCount).toBe(10);
-    count.num++;
     expect(effectCount).toBe(11);
+    count.num++;
+    expect(effectCount).toBe(12);
   });
 });
