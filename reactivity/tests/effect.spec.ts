@@ -16,4 +16,15 @@ describe("effect", () => {
     count.num++;
     expect(effectCount).toBe(12);
   });
+  it("should return runner when call effect", () => {
+    let num = 0;
+    const runner = effect(() => {
+      num++;
+      return "hello world";
+    });
+    expect(num).toBe(1);
+    const result = runner();
+    expect(result).toBe("hello world");
+    expect(num).toBe(2);
+  });
 });

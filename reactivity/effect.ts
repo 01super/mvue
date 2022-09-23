@@ -6,7 +6,8 @@ class ReactiveEffect {
   }
   run() {
     activeEffect = this;
-    this._fn();
+    const result = this._fn();
+    return result;
   }
 }
 // target => depsMap
@@ -38,4 +39,5 @@ export function trigger(target, key, value) {
 export function effect(effectFn) {
   const _effect = new ReactiveEffect(effectFn);
   _effect.run();
+  return _effect.run.bind(_effect);
 }
