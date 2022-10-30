@@ -53,7 +53,7 @@ class ReactiveEffect {
   }
 }
 
-export function effect(effectFn) {
+export function effect(effectFn, options:any = {}) {
   const _effect = new ReactiveEffect(effectFn);
   _effect.run();
   return _effect.run.bind(_effect);
