@@ -30,6 +30,7 @@ export function track(target, key) {
     depsMap.set(key, dep);
   }
   dep.add(activeEffect);
+  activeEffect.deps.push(dep);
 }
 
 // 触发依赖
@@ -37,13 +38,19 @@ export function trigger(target, key, value) {
   let depsMap = targetMap.get(target);
   let dep = depsMap.get(key);
   for (let effect of dep) {
-    effect.run();
+    if (effect._scheduler) {
+      effect.scheduler();
+    } else {
+      effect.run();
+    }
   }
 }
 
 class ReactiveEffect {
   private _fn;
-  constructor(fn) {
+  deps = [];
+  active = true;
+  constructor(fn, public scheduler?) {
     this._fn = fn;
   }
   run() {
@@ -51,10 +58,29 @@ class ReactiveEffect {
     const result = this._fn();
     return result;
   }
+  stop() {
+    if(this.active) {
+      cleanupEffect(this);
+      this.active = false;
+    }
+  }
 }
 
-export function effect(effectFn, options:any = {}) {
-  const _effect = new ReactiveEffect(effectFn);
+function cleanupEffect(effect) {
+  effect.forEach((dep: any) => {
+    dep.delete(effect);
+  });
+}
+
+export function effect(effectFn, options: any = {}) {
+  const _effect = new ReactiveEffect(effectFn, options.scheduler);
   _effect.run();
-  return _effect.run.bind(_effect);
+  const runner: any = _effect.run.bind(_effect);
+  runner.effect = _effect;
+  return runner;
+}
+
+export function stop(runner) {
+  console.log("runner: ", runner);
+  runner.effect.stop();
 }
