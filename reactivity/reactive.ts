@@ -8,7 +8,7 @@ import { track, trigger } from "./effect";
 export function reactive(raw) {
   return new Proxy(raw, {
     get: (target, key, receiver) => {
-      console.log(target === raw); // true
+      // console.log(target === raw); // true
       // 收集依赖
       track(target, key);
       return Reflect.get(target, key, receiver);

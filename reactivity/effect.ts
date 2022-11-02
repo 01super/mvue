@@ -16,21 +16,37 @@ let activeEffect;
 // target => depsMap
 const targetMap = new Map();
 
+/**
+ * obj = {count: 1, age: 12}
+ * targetMap = {
+ *    [obj]: {
+ *        count: [
+ *          effect1.runner,
+ *          effect3.runner
+ *        ],
+ *        age: [
+ *          effect2.runner
+ *        ]
+ *    }
+ * }
+ */
 // 收集依赖
 export function track(target, key) {
-  let depsMap = targetMap.get(target);
-  if (!depsMap) {
-    depsMap = new Map();
-    targetMap.set(target, depsMap);
+  if (activeEffect) {
+    let depsMap = targetMap.get(target);
+    if (!depsMap) {
+      depsMap = new Map();
+      targetMap.set(target, depsMap);
+    }
+    // key => effectFn
+    let dep = depsMap.get(key);
+    if (!dep) {
+      dep = new Set();
+      depsMap.set(key, dep);
+    }
+    dep.add(activeEffect);
+    activeEffect.deps.push(dep);
   }
-  // key => effectFn
-  let dep = depsMap.get(key);
-  if (!dep) {
-    dep = new Set();
-    depsMap.set(key, dep);
-  }
-  dep.add(activeEffect);
-  activeEffect.deps.push(dep);
 }
 
 // 触发依赖
@@ -38,7 +54,7 @@ export function trigger(target, key, value) {
   let depsMap = targetMap.get(target);
   let dep = depsMap.get(key);
   for (let effect of dep) {
-    if (effect._scheduler) {
+    if (effect.scheduler) {
       effect.scheduler();
     } else {
       effect.run();
@@ -49,17 +65,19 @@ export function trigger(target, key, value) {
 class ReactiveEffect {
   private _fn;
   deps = [];
+  // 调用 stop 后会变成 false
   active = true;
-  constructor(fn, public scheduler?) {
+  public scheduler: Function | undefined;
+  constructor(fn, scheduler?) {
     this._fn = fn;
+    this.scheduler = scheduler;
   }
   run() {
     activeEffect = this;
-    const result = this._fn();
-    return result;
+    return this._fn();
   }
   stop() {
-    if(this.active) {
+    if (this.active) {
       cleanupEffect(this);
       this.active = false;
     }
@@ -67,7 +85,7 @@ class ReactiveEffect {
 }
 
 function cleanupEffect(effect) {
-  effect.forEach((dep: any) => {
+  effect.deps.forEach((dep: any) => {
     dep.delete(effect);
   });
 }
@@ -81,6 +99,5 @@ export function effect(effectFn, options: any = {}) {
 }
 
 export function stop(runner) {
-  console.log("runner: ", runner);
   runner.effect.stop();
 }

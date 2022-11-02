@@ -54,6 +54,10 @@ describe("effect", () => {
     expect(dummy).toBe(2);
   });
 
+  /**
+   * 调用 stop 后，执行 set 操作，effect 中的 fn 不再执行
+   * 可以手动调用 runner 执行 effect 中的 fn
+   */
   it("stop", () => {
     let dummy;
     const obj = reactive({ prop: 1 });
