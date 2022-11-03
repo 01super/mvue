@@ -4,7 +4,8 @@
   "description": "实现一个简单版的vue",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "testing": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
   "homepage": "https://github.com/01super/mvue#readme",
   "devDependencies": {
     "@babel/core": "^7.19.1",
+    "@babel/plugin-proposal-optional-chaining": "^7.18.9",
     "@babel/preset-env": "^7.19.1",
     "@babel/preset-typescript": "^7.18.6",
     "@types/jest": "^29.0.3",

@@ -94,8 +94,8 @@ function cleanupEffect(effect) {
 
 export function effect(effectFn, options: any = {}) {
   const _effect = new ReactiveEffect(effectFn, options);
-  _effect.run();  // 执行 run 的时候才需要收集依赖
-  activeEffect = null;  // 执行完后置空 activeEffect，不收集依赖
+  _effect.run(); // 执行 run 的时候才需要收集依赖
+  activeEffect = null; // 执行完后置空 activeEffect，不收集依赖
   const runner: any = _effect.run.bind(_effect);
   runner.effect = _effect;
   return runner;
