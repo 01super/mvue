@@ -52,10 +52,11 @@ export function track(target, key) {
 // 触发依赖
 export function trigger(target, key, value) {
   let depsMap = targetMap.get(target);
+  if (!depsMap) return;
   let dep = depsMap.get(key);
   for (let effect of dep) {
-    if (effect.scheduler) {
-      effect.scheduler();
+    if (effect.options.scheduler) {
+      effect.options.scheduler();
     } else {
       effect.run();
     }
@@ -63,14 +64,14 @@ export function trigger(target, key, value) {
 }
 
 class ReactiveEffect {
-  private _fn;
+  private readonly _fn;
   deps = [];
   // 调用 stop 后会变成 false
   active = true;
-  public scheduler: Function | undefined;
-  constructor(fn, scheduler?) {
+  public options: any;
+  constructor(fn, options) {
     this._fn = fn;
-    this.scheduler = scheduler;
+    this.options = options;
   }
   run() {
     activeEffect = this;
@@ -79,6 +80,7 @@ class ReactiveEffect {
   stop() {
     if (this.active) {
       cleanupEffect(this);
+      this.options?.onStop();
       this.active = false;
     }
   }
@@ -91,7 +93,7 @@ function cleanupEffect(effect) {
 }
 
 export function effect(effectFn, options: any = {}) {
-  const _effect = new ReactiveEffect(effectFn, options.scheduler);
+  const _effect = new ReactiveEffect(effectFn, options);
   _effect.run();  // 执行 run 的时候才需要收集依赖
   activeEffect = null;  // 执行完后置空 activeEffect，不收集依赖
   const runner: any = _effect.run.bind(_effect);
