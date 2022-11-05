@@ -80,7 +80,7 @@ class ReactiveEffect {
   stop() {
     if (this.active) {
       cleanupEffect(this);
-      this.options?.onStop();
+      this.options.onStop && this.options.onStop();
       this.active = false;
     }
   }
