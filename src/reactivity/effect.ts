@@ -13,6 +13,7 @@
  */
 
 let activeEffect: any = null;
+let shouldTrack = true;
 // target => depsMap
 const targetMap = new Map();
 
@@ -32,21 +33,26 @@ const targetMap = new Map();
  */
 // 收集依赖
 export function track(target, key) {
-  if (activeEffect && activeEffect.active) {
-    let depsMap = targetMap.get(target);
-    if (!depsMap) {
-      depsMap = new Map();
-      targetMap.set(target, depsMap);
-    }
-    // key => effectFn
-    let dep = depsMap.get(key);
-    if (!dep) {
-      dep = new Set();
-      depsMap.set(key, dep);
-    }
-    dep.add(activeEffect);
-    activeEffect.deps.push(dep);
+  if (!isTracking()) return;
+  let depsMap = targetMap.get(target);
+  if (!depsMap) {
+    depsMap = new Map();
+    targetMap.set(target, depsMap);
   }
+  // key => effectFn
+  let dep = depsMap.get(key);
+  if (!dep) {
+    dep = new Set();
+    depsMap.set(key, dep);
+  }
+  if (dep.has(activeEffect)) return;
+  dep.add(activeEffect);
+  activeEffect.deps.push(dep);
+}
+
+// 正在执行 effect 中的函数时才需要执行收集依赖
+function isTracking() {
+  return !!activeEffect && shouldTrack;
 }
 
 // 触发依赖
@@ -74,8 +80,14 @@ class ReactiveEffect {
     this.options = options;
   }
   run() {
+    if (!this.active) {
+      return this._fn();
+    }
     activeEffect = this;
-    return this._fn();
+    shouldTrack = true; // run 的时候需要手收集依赖
+    const result = this._fn();
+    shouldTrack = false;
+    return result;
   }
   stop() {
     if (this.active) {
@@ -90,12 +102,12 @@ function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => {
     dep.delete(effect);
   });
+  effect.deps.length = 0;
 }
 
 export function effect(effectFn, options: any = {}) {
   const _effect = new ReactiveEffect(effectFn, options);
   _effect.run(); // 执行 run 的时候才需要收集依赖
-  activeEffect = null; // 执行完后置空 activeEffect，不收集依赖
   const runner: any = _effect.run.bind(_effect);
   runner.effect = _effect;
   return runner;
