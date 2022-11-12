@@ -45,13 +45,17 @@ export function track(target, key) {
     dep = new Set();
     depsMap.set(key, dep);
   }
+  trackEffects(dep);
+}
+
+export function trackEffects(dep) {
   if (dep.has(activeEffect)) return;
   dep.add(activeEffect);
   activeEffect.deps.push(dep);
 }
 
 // 正在执行 effect 中的函数时才需要执行收集依赖
-function isTracking() {
+export function isTracking() {
   return !!activeEffect && shouldTrack;
 }
 
@@ -60,6 +64,10 @@ export function trigger(target, key, value) {
   let depsMap = targetMap.get(target);
   if (!depsMap) return;
   let dep = depsMap.get(key);
+  triggerEffects(dep);
+}
+
+export function triggerEffects(dep: any) {
   for (let effect of dep) {
     if (effect.options.scheduler) {
       effect.options.scheduler();
@@ -68,7 +76,6 @@ export function trigger(target, key, value) {
     }
   }
 }
-
 class ReactiveEffect {
   private readonly _fn;
   deps = [];
