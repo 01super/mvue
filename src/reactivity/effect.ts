@@ -76,7 +76,7 @@ export function triggerEffects(dep: any) {
     }
   }
 }
-class ReactiveEffect {
+export class ReactiveEffect {
   private readonly _fn;
   deps = [];
   // 调用 stop 后会变成 false
